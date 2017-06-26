@@ -62,7 +62,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     end
 
     assert_raise PubSub.BroadcastError, fn ->
-      PubSub.broadcast_from!(FailedBroadcaster, self, "topic", :ping)
+      PubSub.broadcast_from!(FailedBroadcaster, self(), "topic", :ping)
     end
   end
 

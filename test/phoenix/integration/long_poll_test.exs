@@ -28,8 +28,8 @@ defmodule Phoenix.Integration.LongPollTest do
     intercept ["new_msg"]
 
     def join(topic, message, socket) do
-      Process.register(self, String.to_atom(topic))
-      send(self, {:after_join, message})
+      Process.register(self(), String.to_atom(topic))
+      send(self(), {:after_join, message})
       {:ok, socket}
     end
 
@@ -189,7 +189,7 @@ defmodule Phoenix.Integration.LongPollTest do
     end
 
     test "#{@mode}: publishing events" do
-      Phoenix.PubSub.subscribe(__MODULE__, self, "rooms:lobby")
+      Phoenix.PubSub.subscribe(__MODULE__, self(), "rooms:lobby")
       session = join("/ws", "rooms:lobby", @mode)
 
       # Publish successfuly
@@ -213,7 +213,7 @@ defmodule Phoenix.Integration.LongPollTest do
 
       # Publish unauthorized event
       capture_log fn ->
-        Phoenix.PubSub.subscribe(__MODULE__, self, "rooms:private-room")
+        Phoenix.PubSub.subscribe(__MODULE__, self(), "rooms:private-room")
         resp = poll :post, "/ws", session, %{
           "topic" => "rooms:private-room",
           "event" => "new_msg",

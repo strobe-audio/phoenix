@@ -95,7 +95,7 @@ defmodule Phoenix.PubSubTest do
 
     @tag pool_size: size
     test "pool #{size}: broadcast/3 and broadcast!/3 publishes message to each subscriber", config do
-      PubSub.subscribe(config.test, self, "topic9")
+      PubSub.subscribe(config.test, self(), "topic9")
       :ok = PubSub.broadcast(config.test, "topic9", :ping)
       assert_receive :ping
       :ok = PubSub.broadcast!(config.test, "topic9", :ping)
@@ -104,7 +104,7 @@ defmodule Phoenix.PubSubTest do
 
     @tag pool_size: size
     test "pool #{size}: broadcast/3 does not publish message to other topic subscribers", config do
-      PubSub.subscribe(config.test, self, "topic9")
+      PubSub.subscribe(config.test, self(), "topic9")
 
       Enum.each 0..10, fn _ ->
         PubSub.subscribe(config.test, spawn_pid(), "topic10")
@@ -116,12 +116,12 @@ defmodule Phoenix.PubSubTest do
 
     @tag pool_size: size
     test "pool #{size}: broadcast_from/4 and broadcast_from!/4 skips sender", config do
-      PubSub.subscribe(config.test, self, "topic11")
+      PubSub.subscribe(config.test, self(), "topic11")
 
-      PubSub.broadcast_from(config.test, self, "topic11", :ping)
+      PubSub.broadcast_from(config.test, self(), "topic11", :ping)
       refute_received :ping
 
-      PubSub.broadcast_from!(config.test, self, "topic11", :ping)
+      PubSub.broadcast_from!(config.test, self(), "topic11", :ping)
       refute_received :ping
     end
   end

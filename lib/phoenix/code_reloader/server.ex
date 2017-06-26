@@ -99,7 +99,7 @@ defmodule Phoenix.CodeReloader.Server do
           Mix.Project.build_structure
           res = Enum.flat_map(compilers, &mix_compile_each(&1, opts))
 
-          if :ok in res && consolidate_protocols? do
+          if :ok in res && consolidate_protocols?() do
             Mix.Task.reenable("compile.protocols")
             mix_compile_each("protocols", [])
           else

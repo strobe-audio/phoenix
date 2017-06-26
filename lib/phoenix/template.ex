@@ -108,7 +108,7 @@ defmodule Phoenix.Template do
 
   @doc false
   defmacro __using__(options) do
-    root = Dict.fetch! options, :root
+    root = Keyword.fetch! options, :root
 
     quote do
       @template_root Path.relative_to_cwd(unquote(root))
@@ -133,7 +133,7 @@ defmodule Phoenix.Template do
       to render a particular template.
       """
       def template_not_found(template, assigns) do
-        {root, names} = __templates__
+        {root, names} = __templates__()
         raise UndefinedError,
           assigns: assigns,
           available: names,
@@ -197,7 +197,7 @@ defmodule Phoenix.Template do
   """
   @spec format_encoder(name) :: module | nil
   def format_encoder(template_name) when is_binary(template_name) do
-    Map.get(compiled_format_encoders, Path.extname(template_name))
+    Map.get(compiled_format_encoders(), Path.extname(template_name))
   end
 
   defp compiled_format_encoders do
@@ -303,7 +303,7 @@ defmodule Phoenix.Template do
   """
   @spec find_all(root) :: [path]
   def find_all(root) do
-    extensions = engines |> Map.keys() |> Enum.join(",")
+    extensions = engines() |> Map.keys() |> Enum.join(",")
     Path.wildcard("#{root}/*.{#{extensions}}")
   end
 

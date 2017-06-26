@@ -92,7 +92,7 @@ defmodule Phoenix.PubSub.Local do
   def broadcast(pubsub_server, pool_size, from, topic, msg)
     when is_atom(pubsub_server) do
 
-    parent = self
+    parent = self()
     for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
         do_broadcast(pubsub_server, shard, from, topic, msg)

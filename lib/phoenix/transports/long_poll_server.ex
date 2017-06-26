@@ -51,16 +51,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
       {:ok, socket} ->
         state = %{buffer: [],
                   socket: socket,
-                  channels: HashDict.new,
-                  channels_inverse: HashDict.new,
+                  channels: Map.new,
+                  channels_inverse: Map.new,
                   window_ms: trunc(window_ms * 1.5),
                   pubsub_server: socket.endpoint.__pubsub_server__(),
                   priv_topic: priv_topic,
                   last_client_poll: now_ms(),
                   client_ref: nil}
 
-        if socket.id, do: PubSub.subscribe(state.pubsub_server, self, socket.id, link: true)
-        :ok = PubSub.subscribe(state.pubsub_server, self, priv_topic, link: true)
+        if socket.id, do: PubSub.subscribe(state.pubsub_server, self(), socket.id, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, self(), priv_topic, link: true)
 
         schedule_inactive_shutdown(state.window_ms)
 
@@ -79,8 +79,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
     |> case do
       {:joined, channel_pid, reply_msg} ->
         broadcast_from!(state, client_ref, {:dispatch, ref})
-        new_state = %{state | channels: HashDict.put(state.channels, msg.topic, channel_pid),
-                              channels_inverse: HashDict.put(state.channels_inverse, channel_pid, msg.topic)}
+        new_state = %{state | channels: Map.put(state.channels, msg.topic, channel_pid),
+                              channels_inverse: Map.put(state.channels_inverse, channel_pid, msg.topic)}
         publish_reply(reply_msg, new_state)
 
       {:reply, reply_msg} ->
@@ -103,12 +103,12 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def handle_info({:EXIT, channel_pid, reason}, state) do
-    case HashDict.get(state.channels_inverse, channel_pid) do
+    case Map.get(state.channels_inverse, channel_pid) do
       nil ->
         {:stop, {:shutdown, :pubsub_server_terminated}, state}
       topic ->
-        new_state = %{state | channels: HashDict.delete(state.channels, topic),
-                              channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}
+        new_state = %{state | channels: Map.delete(state.channels, topic),
+                              channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
         publish_reply(Transport.on_exit_message(topic, reason), new_state)
     end
   end
@@ -146,7 +146,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   defp broadcast_from!(state, client_ref, msg) when is_binary(client_ref),
-    do: PubSub.broadcast_from!(state.pubsub_server, self, client_ref, msg)
+    do: PubSub.broadcast_from!(state.pubsub_server, self(), client_ref, msg)
   defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
@@ -168,6 +168,6 @@ defmodule Phoenix.Transports.LongPoll.Server do
   defp now_ms, do: :os.timestamp() |> time_to_ms()
 
   defp schedule_inactive_shutdown(window_ms) do
-    Process.send_after(self, :shutdown_if_inactive, window_ms)
+    Process.send_after(self(), :shutdown_if_inactive, window_ms)
   end
 end

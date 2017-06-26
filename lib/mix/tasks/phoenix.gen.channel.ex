@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
   defp validate_args!(args) do
     unless length(args) == 2 do
-      raise_with_help
+      raise_with_help()
     end
     args
   end

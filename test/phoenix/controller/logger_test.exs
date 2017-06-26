@@ -94,7 +94,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", %{password: "should_not_show"})
       |> fetch_query_params
-      |> Map.update!(:params, &Dict.put(&1, :foo, "bar"))
+      |> Map.update!(:params, &Map.put(&1, :foo, "bar"))
       |> action
     end
     assert output =~ "Parameters: %{:foo => \"bar\", \"password\" => \"[FILTERED]\"}"
